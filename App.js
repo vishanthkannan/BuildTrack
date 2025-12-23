@@ -17,6 +17,8 @@ export default function App() {
   const [screen, setScreen] = useState('role');
   const [role, setRole] = useState(null);
   const [username, setUsername] = useState('');
+  const [editingExpense, setEditingExpense] = useState(null);
+
 
   const goTo = (s) => setScreen(s);
 
@@ -60,6 +62,7 @@ export default function App() {
         <SupervisorDashboard
           username={username}
           goTo={goTo}
+          setEditingExpense={setEditingExpense}
         />
       );
       break;
@@ -69,6 +72,8 @@ export default function App() {
         <AddExpense
           username={username}
           goTo={goTo}
+          editingExpense={editingExpense}
+          setEditingExpense={setEditingExpense}
         />
       );
       break;

@@ -3,7 +3,6 @@ import {View,Text,TextInput } from 'react-native'
 import { commonStyles } from '../../styles/common';
 import AppButton from '../../components/AppButton';
 
-
 export default function Login({ setUsername, role, goTo }) {
   return (
     <SafeAreaView style={commonStyles.container}>

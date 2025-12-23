@@ -57,12 +57,14 @@ export function approveExpense(id) {
 }
 
 // Reject expense (Manager)
-export function rejectExpense(id) {
+export function rejectExpense(id, reason) {
   const expense = store.expenses.find(e => e.id === id);
   if (expense) {
     expense.status = 'REJECTED';
+    expense.rejectReason = reason;
   }
 }
+
 
 // Get approved expenses (used for totals & reports)
 export function getApprovedExpenses() {
