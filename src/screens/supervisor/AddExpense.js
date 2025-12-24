@@ -5,7 +5,11 @@ import { Picker } from '@react-native-picker/picker';
 
 import { commonStyles } from '../../styles/common';
 import AppButton from '../../components/AppButton';
-import { store, addExpense } from '../../store/store';
+import {
+  store,
+  addExpense,
+  addNotification,
+} from '../../store/store';
 import { getCurrentDateTime } from '../../utils/dateTime';
 
 export default function AddExpense({
@@ -14,16 +18,13 @@ export default function AddExpense({
   setEditingExpense,
   goTo,
 }) {
-  /* ---------------- STATE ---------------- */
-
   const [selectedSiteId, setSelectedSiteId] = useState('');
   const [selectedMaterialId, setSelectedMaterialId] = useState('');
   const [manualMaterial, setManualMaterial] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
 
-  /* ---------------- EDIT MODE PREFILL ---------------- */
-
+  /* -------- EDIT MODE PREFILL -------- */
   useEffect(() => {
     if (editingExpense) {
       setSelectedSiteId(String(editingExpense.siteId));
@@ -37,24 +38,16 @@ export default function AddExpense({
           ? editingExpense.materialName
           : ''
       );
-      setPrice(
-        editingExpense.isManualMaterial
-          ? String(editingExpense.supervisorPrice)
-          : ''
-      );
+      setPrice(String(editingExpense.supervisorPrice));
       setQuantity(String(editingExpense.quantity));
     }
   }, [editingExpense]);
-
-  /* ---------------- DERIVED DATA ---------------- */
 
   const isManual = selectedMaterialId === 'OTHER';
 
   const selectedSite =
     selectedSiteId !== ''
-      ? store.sites.find(
-          s => s.id === Number(selectedSiteId)
-        )
+      ? store.sites.find(s => s.id === Number(selectedSiteId))
       : null;
 
   const selectedMaterial =
@@ -64,16 +57,15 @@ export default function AddExpense({
         )
       : null;
 
-  /* ---------------- SUBMIT ---------------- */
+  useEffect(() => {
+    if (selectedMaterial && !editingExpense) {
+      setPrice(String(selectedMaterial.price));
+    }
+  }, [selectedMaterial]);
 
   const handleSubmit = () => {
-    if (!selectedSite) {
-      Alert.alert('Error', 'Select a site');
-      return;
-    }
-
-    if (!quantity || Number(quantity) <= 0) {
-      Alert.alert('Error', 'Enter valid quantity');
+    if (!selectedSite || !quantity || !price) {
+      Alert.alert('Error', 'Fill all fields');
       return;
     }
 
@@ -89,60 +81,51 @@ export default function AddExpense({
     };
 
     if (isManual) {
-      if (!manualMaterial.trim() || !price) {
-        Alert.alert(
-          'Error',
-          'Enter material name and price'
-        );
-        return;
-      }
-
       expenseData = {
         ...expenseData,
-        materialName: manualMaterial.trim(),
+        materialName: manualMaterial,
         shop: 'Manual Entry',
         supervisorPrice: Number(price),
         managerPrice: null,
-        amount:
-          Number(price) * Number(quantity),
+        amount: Number(price) * Number(quantity),
         isManualMaterial: true,
       };
     } else {
-      if (!selectedMaterial) {
-        Alert.alert('Error', 'Select a material');
-        return;
-      }
-
       expenseData = {
         ...expenseData,
         materialId: selectedMaterial.id,
         materialName: selectedMaterial.name,
         shop: selectedMaterial.shop,
-        supervisorPrice: selectedMaterial.price,
+        supervisorPrice: Number(price),
         managerPrice: selectedMaterial.price,
-        amount:
-          Number(selectedMaterial.price) *
-          Number(quantity),
+        amount: Number(price) * Number(quantity),
         isManualMaterial: false,
       };
     }
 
-    /* -------- EDIT & RESEND -------- */
-
+    /* ---- EDIT & RESEND ---- */
     if (editingExpense) {
-      editingExpense.siteId = expenseData.siteId;
-      editingExpense.siteName = expenseData.siteName;
-      editingExpense.materialName =
-        expenseData.materialName;
-      editingExpense.shop = expenseData.shop;
-      editingExpense.quantity = expenseData.quantity;
-      editingExpense.amount = expenseData.amount;
-      editingExpense.supervisorPrice =
-        expenseData.supervisorPrice;
-      editingExpense.managerPrice =
-        expenseData.managerPrice;
-      editingExpense.isManualMaterial =
-        expenseData.isManualMaterial;
+      Object.assign(editingExpense, expenseData);
+
+      editingExpense.isPriceChanged =
+        editingExpense.managerPrice !== null &&
+        editingExpense.supervisorPrice !==
+          editingExpense.managerPrice;
+
+      editingExpense.priceDifference =
+        editingExpense.isPriceChanged
+          ? editingExpense.supervisorPrice -
+            editingExpense.managerPrice
+          : null;
+
+      if (editingExpense.isPriceChanged) {
+        addNotification({
+          type: 'PRICE_CHANGE',
+          message: `⚠ ${username} changed price of ${editingExpense.materialName}`,
+          supervisor: username,
+          site: editingExpense.siteName,
+        });
+      }
 
       editingExpense.status = 'PENDING';
       editingExpense.rejectReason = null;
@@ -152,54 +135,46 @@ export default function AddExpense({
       return;
     }
 
-    /* -------- NEW ENTRY -------- */
+    /* ---- NEW ENTRY ---- */
+    if (
+      expenseData.managerPrice !== null &&
+      expenseData.supervisorPrice !== expenseData.managerPrice
+    ) {
+      addNotification({
+        type: 'PRICE_CHANGE',
+        message: `⚠ ${username} changed price of ${expenseData.materialName}`,
+        supervisor: username,
+        site: expenseData.siteName,
+      });
+    }
 
     addExpense(expenseData);
     goTo('supervisorDashboard');
   };
 
-  /* ---------------- UI ---------------- */
-
   return (
     <SafeAreaView style={commonStyles.container}>
       <Text style={commonStyles.title}>
-        {editingExpense
-          ? 'Edit Material'
-          : 'Add Material'}
+        {editingExpense ? 'Edit Material' : 'Add Material'}
       </Text>
 
-      {/* SITE PICKER */}
       <View style={commonStyles.card}>
-        <Text>Select Site</Text>
-        <Picker
-          selectedValue={selectedSiteId}
-          onValueChange={setSelectedSiteId}
-        >
-          <Picker.Item
-            label="-- Select Site --"
-            value=""
-          />
-          {store.sites.map(site => (
-            <Picker.Item
-              key={site.id}
-              label={site.name}
-              value={String(site.id)}
-            />
+        <Text>Site</Text>
+        <Picker selectedValue={selectedSiteId} onValueChange={setSelectedSiteId}>
+          <Picker.Item label="Select Site" value="" />
+          {store.sites.map(s => (
+            <Picker.Item key={s.id} label={s.name} value={String(s.id)} />
           ))}
         </Picker>
       </View>
 
-      {/* MATERIAL PICKER */}
       <View style={commonStyles.card}>
-        <Text>Select Material</Text>
+        <Text>Material</Text>
         <Picker
           selectedValue={selectedMaterialId}
           onValueChange={setSelectedMaterialId}
         >
-          <Picker.Item
-            label="-- Select Material --"
-            value=""
-          />
+          <Picker.Item label="Select Material" value="" />
           {store.materials.map(m => (
             <Picker.Item
               key={m.id}
@@ -207,25 +182,18 @@ export default function AddExpense({
               value={String(m.id)}
             />
           ))}
-          <Picker.Item
-            label="Other (Not in list)"
-            value="OTHER"
-          />
+          <Picker.Item label="Other" value="OTHER" />
         </Picker>
       </View>
 
-      {/* MANUAL MATERIAL */}
-      {isManual && (
+      {(isManual || selectedMaterial) && (
         <View style={commonStyles.card}>
+          {!isManual && (
+            <Text>Manager Price: ₹{selectedMaterial.price}</Text>
+          )}
           <TextInput
             style={commonStyles.input}
-            placeholder="Material name"
-            value={manualMaterial}
-            onChangeText={setManualMaterial}
-          />
-          <TextInput
-            style={commonStyles.input}
-            placeholder="Price"
+            placeholder="Supervisor Price"
             keyboardType="numeric"
             value={price}
             onChangeText={setPrice}
@@ -233,19 +201,17 @@ export default function AddExpense({
         </View>
       )}
 
-      {/* AUTO MATERIAL INFO */}
-      {selectedMaterial && (
+      {isManual && (
         <View style={commonStyles.card}>
-          <Text>
-            Shop: {selectedMaterial.shop}
-          </Text>
-          <Text>
-            Price: ₹{selectedMaterial.price}
-          </Text>
+          <TextInput
+            style={commonStyles.input}
+            placeholder="Material Name"
+            value={manualMaterial}
+            onChangeText={setManualMaterial}
+          />
         </View>
       )}
 
-      {/* QUANTITY */}
       <View style={commonStyles.card}>
         <TextInput
           style={commonStyles.input}
@@ -257,14 +223,7 @@ export default function AddExpense({
       </View>
 
       <AppButton title="Submit" onPress={handleSubmit} />
-      <AppButton
-        title="Back"
-        type="danger"
-        onPress={() => {
-          setEditingExpense(null);
-          goTo('supervisorDashboard');
-        }}
-      />
+      <AppButton title="Back" type="danger" onPress={() => goTo('supervisorDashboard')} />
     </SafeAreaView>
   );
 }

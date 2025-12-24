@@ -17,6 +17,8 @@ export const store = {
 
   // Supervisor-submitted expenses
   expenses: [],
+  notifications: [],
+
 };
 
 // ---- STORE ACTIONS ---- //
@@ -44,9 +46,25 @@ export function addExpense(expense) {
   store.expenses.push({
     id: Date.now(),
     ...expense,
-    status: 'PENDING', // default
+    status: 'PENDING',
+    isPriceChanged:
+      expense.managerPrice !== null &&
+      expense.supervisorPrice !== expense.managerPrice,
+    priceDifference:
+      expense.managerPrice !== null
+        ? expense.supervisorPrice - expense.managerPrice
+        : null,
   });
 }
+//Notification
+export function addNotification(notification) {
+  store.notifications.push({
+    id: Date.now(),
+    time: new Date().toLocaleString(),
+    ...notification,
+  });
+}
+
 
 // Approve expense (Manager)
 export function approveExpense(id) {
