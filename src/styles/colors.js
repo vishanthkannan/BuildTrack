@@ -9,5 +9,17 @@ export const colors = {
   border: '#D1D5DB',       // input borders
   success: '#16A34A',      // approved / success
   danger: '#DC2626',       // reject / error
-  warning: '#F59E0B'       // pending / alert
+  warning: '#F59E0B',      // pending / alert
+  
+  row: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginBottom: 12,
+},
+
+amount: {
+  fontSize: 18,
+  fontWeight: 'bold',
+},
+
 };

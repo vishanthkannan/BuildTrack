@@ -11,16 +11,46 @@ export default function SupervisorDashboard({
   setEditingExpense,
   goTo,
 }) {
+  // force refresh when screen opens
   const [, forceUpdate] = useState(0);
 
   useEffect(() => {
     forceUpdate(n => n + 1);
   }, []);
 
-  const myExpenses = store.expenses.filter(e => e.supervisor === username);
-  const rejected = myExpenses.filter(e => e.status === 'REJECTED');
-  const pending = myExpenses.filter(e => e.status === 'PENDING');
+  const myExpenses = store.expenses.filter(
+    e => e.supervisor === username
+  );
 
+  const pending = myExpenses.filter(
+    e => e.status === 'PENDING'
+  );
+
+  const rejected = myExpenses.filter(
+    e => e.status === 'REJECTED'
+  );
+
+  const approved = myExpenses.filter(
+    e => e.status === 'APPROVED'
+  );
+
+  // TOTALS
+  const totalSubmitted = myExpenses.reduce(
+    (sum, e) => sum + e.amount,
+    0
+  );
+
+  const approvedTotal = approved.reduce(
+    (sum, e) => sum + e.amount,
+    0
+  );
+
+  const pendingTotal = pending.reduce(
+    (sum, e) => sum + e.amount,
+    0
+  );
+
+  // notifications
   const myNotifications = store.notifications.filter(
     n => n.supervisor === username
   );
@@ -31,11 +61,40 @@ export default function SupervisorDashboard({
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      <Text style={commonStyles.title}>Supervisor: {username}</Text>
+      <Text style={commonStyles.title}>
+        Supervisor: {username}
+      </Text>
 
+      {/* TOTAL CARDS */}
+      <View style={commonStyles.row}>
+        <View style={commonStyles.card}>
+          <Text>Total Submitted</Text>
+          <Text style={commonStyles.amount}>
+            ₹{totalSubmitted}
+          </Text>
+        </View>
+
+        <View style={commonStyles.card}>
+          <Text>Approved</Text>
+          <Text style={commonStyles.amount}>
+            ₹{approvedTotal}
+          </Text>
+        </View>
+
+        <View style={commonStyles.card}>
+          <Text>Pending</Text>
+          <Text style={commonStyles.amount}>
+            ₹{pendingTotal}
+          </Text>
+        </View>
+      </View>
+
+      {/* NOTIFICATIONS */}
       {myNotifications.length > 0 && (
         <View style={commonStyles.card}>
-          <Text style={{ fontWeight: 'bold' }}>Notifications</Text>
+          <Text style={commonStyles.subtitle}>
+            Notifications
+          </Text>
           {myNotifications.map(n => (
             <Text key={n.id}>{n.message}</Text>
           ))}
@@ -43,26 +102,45 @@ export default function SupervisorDashboard({
       )}
 
       {globalWarnings.length > 0 && (
-        <View style={[commonStyles.card, { backgroundColor: '#FFF3CD' }]}>
-          <Text style={{ fontWeight: 'bold' }}>⚠ Warnings</Text>
+        <View
+          style={[
+            commonStyles.card,
+            { backgroundColor: '#FFF3CD' },
+          ]}
+        >
+          <Text style={commonStyles.subtitle}>
+            ⚠ Warnings
+          </Text>
           {globalWarnings.map(n => (
             <Text key={n.id}>{n.message}</Text>
           ))}
         </View>
       )}
 
-      <Text style={commonStyles.subtitle}>Pending</Text>
+      {/* PENDING */}
+      <Text style={commonStyles.subtitle}>
+        Waiting for Approval
+      </Text>
+
       {pending.map(e => (
         <View key={e.id} style={commonStyles.card}>
-          <Text>{e.materialName} – ₹{e.amount}</Text>
+          <Text>{e.materialName}</Text>
+          <Text>₹{e.amount}</Text>
         </View>
       ))}
 
-      <Text style={commonStyles.subtitle}>Rejected</Text>
+      {/* REJECTED */}
+      <Text style={commonStyles.subtitle}>
+        Rejected
+      </Text>
+
       {rejected.map(e => (
         <View key={e.id} style={commonStyles.card}>
           <Text>{e.materialName}</Text>
-          <Text style={{ color: 'red' }}>Reason: {e.rejectReason}</Text>
+          <Text style={{ color: 'red' }}>
+            Reason: {e.rejectReason}
+          </Text>
+
           <AppButton
             title="Edit & Resend"
             onPress={() => {
@@ -73,6 +151,7 @@ export default function SupervisorDashboard({
         </View>
       ))}
 
+      {/* ACTIONS */}
       <AppButton
         title="Add Material"
         onPress={() => {
@@ -81,7 +160,11 @@ export default function SupervisorDashboard({
         }}
       />
 
-      <AppButton title="Logout" type="danger" onPress={() => goTo('role')} />
+      <AppButton
+        title="Logout"
+        type="danger"
+        onPress={() => goTo('role')}
+      />
     </SafeAreaView>
   );
 }

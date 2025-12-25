@@ -12,6 +12,8 @@ import Approvals from './src/screens/manager/Approvals';
 
 import SupervisorDashboard from './src/screens/supervisor/SupervisorDashboard';
 import AddExpense from './src/screens/supervisor/AddExpense';
+import AssignMoney from './src/screens/manager/AssignMoney';
+
 
 export default function App() {
   const [screen, setScreen] = useState('role');
@@ -76,6 +78,10 @@ export default function App() {
           setEditingExpense={setEditingExpense}
         />
       );
+      break;
+
+    case 'assignMoney':
+      ScreenComponent =  <AssignMoney goTo={goTo} />;
       break;
 
     default:

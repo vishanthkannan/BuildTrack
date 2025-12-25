@@ -18,6 +18,8 @@ export const store = {
   // Supervisor-submitted expenses
   expenses: [],
   notifications: [],
+  supervisorFunds: [],
+
 
 };
 
@@ -88,4 +90,28 @@ export function rejectExpense(id, reason) {
 export function getApprovedExpenses() {
   return store.expenses.filter(e => e.status === 'APPROVED');
 }
+
+//FundsTOsupervisor
+export function addFundsToSupervisor(supervisor, amount) {
+  let fund = store.supervisorFunds.find(
+    f => f.supervisor === supervisor
+  );
+
+  if (!fund) {
+    store.supervisorFunds.push({
+      supervisor,
+      totalAllocated: amount,
+    });
+  } else {
+    fund.totalAllocated += amount; // ADDITIVE
+  }
+}
+
+export function getSupervisorFunds(supervisor) {
+  const fund = store.supervisorFunds.find(
+    f => f.supervisor === supervisor
+  );
+  return fund ? fund.totalAllocated : 0;
+}
+
 
