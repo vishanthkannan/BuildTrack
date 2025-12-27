@@ -19,6 +19,8 @@ export const store = {
   expenses: [],
   notifications: [],
   supervisorFunds: [],
+  notifications: [],
+
 
 
 };
@@ -62,7 +64,8 @@ export function addExpense(expense) {
 export function addNotification(notification) {
   store.notifications.push({
     id: Date.now(),
-    time: new Date().toLocaleString(),
+    createdAt: new Date().toLocaleString(),
+    isRead: false,
     ...notification,
   });
 }

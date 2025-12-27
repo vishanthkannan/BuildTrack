@@ -74,4 +74,12 @@ export const commonStyles = StyleSheet.create({
   spacerLarge: {
     height: 24,
   },
+  
+  appHeader: {
+  fontSize: 22,
+  fontWeight: 'bold',
+  textAlign: 'center',
+  marginBottom: 10,
+},
+
 });

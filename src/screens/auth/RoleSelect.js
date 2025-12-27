@@ -8,6 +8,8 @@ import { View, Text } from 'react-native';
 export default function RoleSelect({ setRole, goTo }) {
   return (
     <SafeAreaView style={commonStyles.center}>
+      <Text style={commonStyles.appHeader}> RDN Creaters</Text>
+
       <Text style={commonStyles.title}>Select Role</Text>
 
       <View style={{ width: '80%' }}>

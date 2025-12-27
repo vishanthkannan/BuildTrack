@@ -5,7 +5,8 @@ import { commonStyles } from '../../styles/common';
 import AppButton from '../../components/AppButton';
 import { store } from '../../store/store';
 
-export default function ManagerDashboard({ goTo }) {
+export default function ManagerDashboard({ goTo }) { 
+
   // only approved expenses count
   const approvedExpenses = store.expenses.filter(
     e => e.status === 'APPROVED'
@@ -16,15 +17,30 @@ export default function ManagerDashboard({ goTo }) {
     0
   );
 
+  const overspendAlerts = store.notifications.filter(
+  n => n.type === 'OVERSPENT'
+);
+
+
   // placeholder for future income feature
   const totalIncome = 0;
   const totalProfit = totalIncome - totalExpense;
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      <Text style={commonStyles.title}>
-        Manager Dashboard
-      </Text>
+      <Text style={commonStyles.appHeader}> RDN Creaters </Text>
+      <Text style={commonStyles.title}>Manager Dashboard </Text>
+
+      <View style={commonStyles.card}>
+  <Text style={{ fontWeight: 'bold' }}>
+    🔔 Notifications ({overspendAlerts.length})
+  </Text>
+
+  {overspendAlerts.map(n => (
+    <Text key={n.id}>{n.message}</Text>
+  ))}
+</View>
+
 
       {/* TOTAL CARDS */}
       <View style={commonStyles.row}>

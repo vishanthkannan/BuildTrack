@@ -4,12 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { commonStyles } from '../../styles/common';
 import AppButton from '../../components/AppButton';
-import {
-  store,
-  approveExpense,
-  rejectExpense,
-  addNotification,
-} from '../../store/store';
+import {store,approveExpense,rejectExpense,addNotification} from '../../store/store';
 
 export default function Approvals({ goTo }) {
   const [reasons, setReasons] = useState({});
@@ -33,6 +28,17 @@ export default function Approvals({ goTo }) {
               ⚠ Price changed (₹{e.managerPrice} → ₹{e.supervisorPrice})
             </Text>
           )}
+
+          {e.isReApplied ? (
+           <Text style={{ color: 'orange' }}>
+          🔄 Re-applied request
+            </Text>
+          ) : (
+           <Text style={{ color: 'green' }}>
+          🆕 New request
+            </Text>
+          )}
+
 
           <TextInput
             style={commonStyles.input}

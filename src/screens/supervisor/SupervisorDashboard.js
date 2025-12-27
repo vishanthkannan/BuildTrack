@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { commonStyles } from '../../styles/common';
 import AppButton from '../../components/AppButton';
-import { store } from '../../store/store';
+import { store,getSupervisorFunds } from '../../store/store';
 
 export default function SupervisorDashboard({
   username,
@@ -21,6 +21,15 @@ export default function SupervisorDashboard({
   const myExpenses = store.expenses.filter(
     e => e.supervisor === username
   );
+
+  const totalAllocated = getSupervisorFunds(username);
+
+  const approvedSpent = myExpenses
+    .filter(e => e.status === 'APPROVED')
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const remainingBalance = totalAllocated - approvedSpent;
+
 
   const pending = myExpenses.filter(
     e => e.status === 'PENDING'
@@ -61,33 +70,37 @@ export default function SupervisorDashboard({
 
   return (
     <SafeAreaView style={commonStyles.container}>
-      <Text style={commonStyles.title}>
-        Supervisor: {username}
-      </Text>
+      <Text style={commonStyles.appHeader}> RDN Creaters </Text>
+      <Text style={commonStyles.title}> Supervisor: {username}</Text>
 
       {/* TOTAL CARDS */}
-      <View style={commonStyles.row}>
-        <View style={commonStyles.card}>
-          <Text>Total Submitted</Text>
-          <Text style={commonStyles.amount}>
-            ₹{totalSubmitted}
-          </Text>
-        </View>
+<View style={commonStyles.row}>
+  <View style={commonStyles.card}>
+    <Text>Total Allocated</Text>
+    <Text style={commonStyles.amount}>
+      ₹{totalAllocated}
+    </Text>
+  </View>
 
-        <View style={commonStyles.card}>
-          <Text>Approved</Text>
-          <Text style={commonStyles.amount}>
-            ₹{approvedTotal}
-          </Text>
-        </View>
+  <View style={commonStyles.card}>
+    <Text>Approved Spent</Text>
+    <Text style={commonStyles.amount}>
+      ₹{approvedSpent}
+    </Text>
+  </View>
 
-        <View style={commonStyles.card}>
-          <Text>Pending</Text>
-          <Text style={commonStyles.amount}>
-            ₹{pendingTotal}
-          </Text>
-        </View>
-      </View>
+  <View style={commonStyles.card}>
+    <Text>Remaining</Text>
+    <Text
+      style={[
+        commonStyles.amount,
+        { color: remainingBalance < 0 ? 'red' : 'green' },
+      ]}
+    >
+      ₹{remainingBalance}
+    </Text>
+  </View>
+</View>
 
       {/* NOTIFICATIONS */}
       {myNotifications.length > 0 && (

@@ -5,10 +5,10 @@ import { Picker } from '@react-native-picker/picker';
 
 import { commonStyles } from '../../styles/common';
 import AppButton from '../../components/AppButton';
-import {
-  store,
+import {store,
   addExpense,
   addNotification,
+  getSupervisorFunds,
 } from '../../store/store';
 import { getCurrentDateTime } from '../../utils/dateTime';
 
@@ -40,6 +40,8 @@ export default function AddExpense({
       );
       setPrice(String(editingExpense.supervisorPrice));
       setQuantity(String(editingExpense.quantity));
+      editingExpense.isReApplied = true;
+
     }
   }, [editingExpense]);
 
@@ -100,6 +102,8 @@ export default function AddExpense({
         managerPrice: selectedMaterial.price,
         amount: Number(price) * Number(quantity),
         isManualMaterial: false,
+        isReApplied: false,
+
       };
     }
 
@@ -147,6 +151,30 @@ export default function AddExpense({
         site: expenseData.siteName,
       });
     }
+
+    // ----- OVERSPEND CHECK -----
+const totalAllocated = getSupervisorFunds(username);
+
+const approvedSpent = store.expenses
+  .filter(
+    e =>
+      e.supervisor === username &&
+      e.status === 'APPROVED'
+  )
+  .reduce((sum, e) => sum + e.amount, 0);
+
+const remainingBalance =
+  totalAllocated - approvedSpent;
+
+if (remainingBalance < expenseData.amount) {
+  addNotification({
+    type: 'OVERSPENT',
+    message: `⚠ ${username} exceeded allocated amount by ₹${
+      expenseData.amount - remainingBalance
+    }`,
+    supervisor: username,
+  });
+}
 
     addExpense(expenseData);
     goTo('supervisorDashboard');
